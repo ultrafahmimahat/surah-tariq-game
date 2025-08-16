@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hafazan Game – Surah At-Tāriq</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      background: linear-gradient(135deg, #0a0a23 0%, #1a1a3a 100%);
+      color: white;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+    }
+
+    .subtitle {
+      margin-bottom: 20px;
+      color: #cccccc;
+      font-size: clamp(0.9rem, 2vw, 1.1rem);
+    }
+
+    .game-info {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .info-item {
+      background: rgba(255, 215, 0, 0.1);
+      padding: 10px 20px;
+      border-radius: 25px;
+      border: 2px solid #ffd700;
+      font-weight: bold;
+    }
+
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      max-width: 1000px;
+      margin: 20px auto;
+    }
+
+    .card {
+      background: linear-gradient(145deg, #1c1c3c, #2a2a4a);
+      border-radius: 15px;
+      padding: 15px;
+      font-size: 16px;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 120px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: left 0.5s;
+    }
+
+    .card:hover::before {
+      left: 100%;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 24px rgba(255, 215, 0, 0.2);
+      border-color: #ffd700;
+    }
+
+    .card.flipped {
+      background: linear-gradient(145deg, #ffd700, #ffed4e);
+      color: #000;
+      transform: translateY(-5px);
+      border-color: #ffb700;
+      font-weight: bold;
+    }
+
+    .card.matched {
+      background: linear-gradient(145deg, #4CAF50, #66BB6A);
+      color: white;
+      animation: pulse 0.6s ease-in-out;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .card.arabic {
+      font-family: 'Arial Unicode MS', Arial, sans-serif;
+      font-size: 18px;
+      line-height: 1.4;
+      direction: rtl;
+      text-align: center;
+    }
+
+    .card.hint {
+      font-size: 14px;
+      font-style: italic;
+    }
+
+    #status {
+      margin: 20px;
+      font-size: 18px;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+
+    button {
+      padding: 12px 24px;
+      background: linear-gradient(145deg, #ffd700, #ffed4e);
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      color: #000;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(255, 215, 0, 0.4);
+      background: linear-gradient(145deg, #ffed4e, #ffd700);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .difficulty-selector {
+      margin: 20px 0;
+    }
+
+    .difficulty-btn {
+      margin: 0 5px;
+      padding: 8px 16px;
+      background: rgba(255, 215, 0, 0.2);
+      border: 2px solid #ffd700;
+      color: #ffd700;
+    }
+
+    .difficulty-btn.active {
+      background: #ffd700;
+      color: #000;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ffd700, #ffed4e);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .celebration {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(145deg, #4CAF50, #66BB6A);
+      color: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      z-index: 1000;
+      animation: celebrationPop 0.5s ease-out;
+    }
+
+    @keyframes celebrationPop {
+      0% { transform: translate(-50%, -50%) scale(0); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @media (max-width: 768px) {
+      #game-board {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+      }
+      
+      .card {
+        min-height: 100px;
+        font-size: 14px;
+        padding: 10px;
+      }
+
+      .game-info {
+        gap: 15px;
+      }
+
+      .info-item {
+        padding: 8px 16px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎮 Memory Matching – Surah At-Ṭāriq</h1>
+    <p class="subtitle">Padankan setiap ayat Arab dengan hint/ikon ringkas (17 Ayat)</p>
+    
+    <div class="game-info">
+      <div class="info-item">
+        <span>🎯 Padanan: <span id="matches">0</span>/17</span>
+      </div>
+      <div class="info-item">
+        <span>⏱️ Masa: <span id="timer">00:00</span></span>
+      </div>
+      <div class="info-item">
+        <span>🔄 Percubaan: <span id="attempts">0</span></span>
+      </div>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress"></div>
+    </div>
+
+    <div class="difficulty-selector">
+      <span style="margin-right: 10px;">Tahap Kesukaran:</span>
+      <button class="difficulty-btn active" onclick="setDifficulty('easy')" id="easy-btn">Mudah</button>
+      <button class="difficulty-btn" onclick="setDifficulty('medium')" id="medium-btn">Sederhana</button>
+      <button class="difficulty-btn" onclick="setDifficulty('hard')" id="hard-btn">Sukar</button>
+    </div>
+
+    <div id="game-board"></div>
+    
+    <div id="status"></div>
+    
+    <div class="controls">
+      <button onclick="startGame()">🔄 Mula Baharu</button>
+      <button onclick="showHint()" id="hint-btn">💡 Petua</button>
+      <button onclick="pauseGame()" id="pause-btn">⏸️ Jeda</button>
+    </div>
+  </div>
+
+  <script>
+    const DATA_TARIQ = [
+      { arabic: "وَالسَّمَاءِ وَالطَّارِقِ", hint: "Langit & At-Tāriq 🌌" },
+      { arabic: "وَمَا أَدْرَاكَ مَا الطَّارِقُ", hint: "Apakah At-Tāriq? ❓" },
+      { arabic: "النَّجْمُ الثَّاقِبُ", hint: "Bintang yang menembusi ✨" },
+      { arabic: "إِنْ كُلُّ نَفْسٍ لَمَّا عَلَيْهَا حَافِظٌ", hint: "Setiap jiwa ada penjaga 👼" },
+      { arabic: "فَلْيَنْظُرِ الْإِنسَانُ مِمَّ خُلِقَ", hint: "Manusia dicipta dari apa? 🧍" },
+      { arabic: "خُلِقَ مِنْ مَاءٍ دَافِقٍ", hint: "Dicipta dari air terpancar 💧" },
+      { arabic: "يَخْرُجُ مِنْ بَيْنِ الصُّلْبِ وَالتَّرَائِبِ", hint: "Keluar antara tulang belakang & dada 🦴" },
+      { arabic: "إِنَّهُ عَلَى رَجْعِهِ لَقَادِرٌ", hint: "Allah berkuasa mengembalikan ⚡" },
+      { arabic: "يَوْمَ تُبْلَى السَّرَائِرُ", hint: "Hari diuji segala rahsia 📖" },
+      { arabic: "فَمَا لَهُ مِنْ قُوَّةٍ وَلَا نَاصِرٍ", hint: "Tiada kekuatan & penolong 🚫" },
+      { arabic: "وَالسَّمَاءِ ذَاتِ الرَّجْعِ", hint: "Langit yang menurunkan hujan 🌧️" },
+      { arabic: "وَالْأَرْضِ ذَاتِ الصَّدْعِ", hint: "Bumi yang membelah 🌱" },
+      { arabic: "إِنَّهُ لَقَوْلٌ فَصْلٌ", hint: "Al-Quran adalah keputusan muktamad 📜" },
+      { arabic: "وَمَا هُوَ بِالْهَزْلِ", hint: "Bukanlah senda gurau ⚖️" },
+      { arabic: "إِنَّهُمْ يَكِيدُونَ كَيْدًا", hint: "Mereka merancang tipu daya 🎭" },
+      { arabic: "وَأَكِيدُ كَيْدًا", hint: "Allah juga merancang tipu daya ✊" },
+      { arabic: "فَمَهِّلِ الْكَافِرِينَ أَمْهِلْهُمْ رُوَيْدًا", hint: "Berilah tempoh seketika ⏳" },
+    ];
+
+    let firstCard, secondCard;
+    let lockBoard = false;
+    let matched = 0;
+    let attempts = 0;
+    let startTime;
+    let timerInterval;
+    let isPaused = false;
+    let difficulty = 'easy';
+    let hintsUsed = 0;
+    let maxHints = { easy: 5, medium: 3, hard: 1 };
+
+    function startGame() {
+      const board = document.getElementById('game-board');
+      board.innerHTML = '';
+      matched = 0;
+      attempts = 0;
+      hintsUsed = 0;
+      startTime = Date.now();
+      isPaused = false;
+      
+      updateDisplay();
+      document.getElementById('status').textContent = '';
+      document.getElementById('pause-btn').textContent = '⏸️ Jeda';
+      document.getElementById('hint-btn').textContent = `💡 Petua (${maxHints[difficulty] - hintsUsed})`;
+
+      // Mula timer
+      clearInterval(timerInterval);
+      timerInterval = setInterval(updateTimer, 1000);
+
+      // Bina deck
+      let deck = [];
+      let cardsToUse = difficulty === 'easy' ? DATA_TARIQ.slice(0, 8) : 
+                       difficulty === 'medium' ? DATA_TARIQ.slice(0, 12) : 
+                       DATA_TARIQ;
+      
+      cardsToUse.forEach((item, index) => {
+        deck.push({ type: "arabic", content: item.arabic, id: index });
+        deck.push({ type: "hint", content: item.hint, id: index });
+      });
+
+      // Shuffle kad
+      deck.sort(() => Math.random() - 0.5);
+
+      // Bina elemen kad
+      deck.forEach(cardData => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.classList.add(cardData.type);
+        card.dataset.id = cardData.id;
+        card.dataset.type = cardData.type;
+        card.textContent = "❓";
+        card.addEventListener('click', flipCard);
+        board.appendChild(card);
+      });
+    }
+
+    function flipCard() {
+      if (lockBoard || isPaused) return;
+      if (this.classList.contains('flipped')) return;
+      if (this.classList.contains('matched')) return;
+
+      this.classList.add('flipped');
+      
+      const cardIndex = parseInt(this.dataset.id);
+      const cardsToUse = difficulty === 'easy' ? DATA_TARIQ.slice(0, 8) : 
+                         difficulty === 'medium' ? DATA_TARIQ.slice(0, 12) : 
+                         DATA_TARIQ;
+      
+      this.textContent = this.dataset.type === "arabic" ? 
+                        cardsToUse[cardIndex].arabic : 
+                        cardsToUse[cardIndex].hint;
+
+      if (!firstCard) {
+        firstCard = this;
+        return;
+      }
+      
+      secondCard = this;
+      attempts++;
+      updateDisplay();
+      checkMatch();
+    }
+
+    function checkMatch() {
+      const isMatch = firstCard.dataset.id === secondCard.dataset.id &&
+                      firstCard.dataset.type !== secondCard.dataset.type;
+
+      if (isMatch) {
+        firstCard.classList.add('matched');
+        secondCard.classList.add('matched');
+        matched++;
+        updateDisplay();
+        resetTurn();
+        
+        const totalCards = difficulty === 'easy' ? 8 : 
+                          difficulty === 'medium' ? 12 : 17;
+        
+        if (matched === totalCards) {
+          clearInterval(timerInterval);
+          setTimeout(() => showCelebration(), 500);
+        }
+      } else {
+        lockBoard = true;
+        setTimeout(() => {
+          firstCard.classList.remove('flipped');
+          secondCard.classList.remove('flipped');
+          firstCard.textContent = "❓";
+          secondCard.textContent = "❓";
+          resetTurn();
+        }, 1500);
+      }
+    }
+
+    function resetTurn() {
+      [firstCard, secondCard] = [null, null];
+      lockBoard = false;
+    }
+
+    function updateDisplay() {
+      const totalCards = difficulty === 'easy' ? 8 : 
+                        difficulty === 'medium' ? 12 : 17;
+      
+      document.getElementById('matches').textContent = matched;
+      document.getElementById('attempts').textContent = attempts;
+      
+      const progress = (matched / totalCards) * 100;
+      document.getElementById('progress').style.width = progress + '%';
+    }
+
+    function updateTimer() {
+      if (!isPaused && startTime) {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+        const seconds = (elapsed % 60).toString().padStart(2, '0');
+        document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+      }
+    }
+
+    function setDifficulty(level) {
+      difficulty = level;
+      hintsUsed = 0;
+      
+      // Update buttons
+      document.querySelectorAll('.difficulty-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.getElementById(level + '-btn').classList.add('active');
+      
+      document.getElementById('hint-btn').textContent = `💡 Petua (${maxHints[difficulty]})`;
+      
+      startGame();
+    }
+
+    function showHint() {
+      if (hintsUsed >= maxHints[difficulty]) {
+        document.getElementById('status').textContent = '❌ Tiada lagi petua untuk tahap kesukaran ini!';
+        return;
+      }
+
+      const unmatched = document.querySelectorAll('.card:not(.matched)');
+      if (unmatched.length === 0) return;
+
+      // Pilih kad rawak untuk tunjuk sebentar
+      const randomCard = unmatched[Math.floor(Math.random() * unmatched.length)];
+      const cardIndex = parseInt(randomCard.dataset.id);
+      const cardsToUse = difficulty === 'easy' ? DATA_TARIQ.slice(0, 8) : 
+                         difficulty === 'medium' ? DATA_TARIQ.slice(0, 12) : 
+                         DATA_TARIQ;
+      
+      randomCard.classList.add('flipped');
+      randomCard.textContent = randomCard.dataset.type === "arabic" ? 
+                              cardsToUse[cardIndex].arabic : 
+                              cardsToUse[cardIndex].hint;
+      
+      setTimeout(() => {
+        randomCard.classList.remove('flipped');
+        randomCard.textContent = "❓";
+      }, 2000);
+
+      hintsUsed++;
+      document.getElementById('hint-btn').textContent = `💡 Petua (${maxHints[difficulty] - hintsUsed})`;
+    }
+
+    function pauseGame() {
+      isPaused = !isPaused;
+      const pauseBtn = document.getElementById('pause-btn');
+      
+      if (isPaused) {
+        pauseBtn.textContent = '▶️ Sambung';
+        document.getElementById('status').textContent = '⏸️ Permainan dijeda';
+      } else {
+        pauseBtn.textContent = '⏸️ Jeda';
+        document.getElementById('status').textContent = '';
+      }
+    }
+
+    function showCelebration() {
+      const totalCards = difficulty === 'easy' ? 8 : 
+                        difficulty === 'medium' ? 12 : 17;
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      
+      const celebration = document.createElement('div');
+      celebration.className = 'celebration';
+      celebration.innerHTML = `
+        <h2>🎉 Tahniah!</h2>
+        <p>Anda telah berjaya padankan semua ${totalCards} ayat!</p>
+        <p>⏱️ Masa: ${minutes}:${seconds.toString().padStart(2, '0')}</p>
+        <p>🔄 Percubaan: ${attempts}</p>
+        <p>💡 Petua digunakan: ${hintsUsed}</p>
+        <button onclick="this.parentElement.remove(); startGame();" style="margin-top: 20px;">
+          🔄 Main Lagi
+        </button>
+      `;
+      
+      document.body.appendChild(celebration);
+      
+      // Auto close after 5 seconds
+      setTimeout(() => {
+        if (celebration.parentElement) {
+          celebration.remove();
+        }
+      }, 5000);
+    }
+
+    // Mula permainan automatik
+    startGame();
+  </script>
+</body>
+</html>
+commit message: "Add Surah At-Tariq memory game"
